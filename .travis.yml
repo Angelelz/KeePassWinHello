@@ -1,10 +1,11 @@
 language: csharp
-solution: KeePassWinHello.sln
+solution: src/KeePassWinHello.sln
 
 addons:
   apt:
     packages:
       - openjdk-8-jdk
+      - unzip
   sonarcloud:
     organization: "sirandros-github"
 
@@ -13,7 +14,7 @@ jdk:
 
 script:
   - sonar-scanner
-
-cache:
-  directories:
-    - '$HOME/.sonar/cache'
+  - wget https://sourceforge.net/projects/keepass/files/KeePass%202.x/2.42.1/KeePass-2.42.1.zip
+  - unzip KeePass-2.42.1.zip -d lib
+  - cd src
+  - msbuild /p:Configuration=Release /p:DefineConstants="MONO" KeePassWinHello.sln

@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6A249FA1-3F87-4C81-8D31-6BDF62308F48}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KeePassWinHello</RootNamespace>
+    <AssemblyName>KeePassWinHello</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="KeePass">
+      <HintPath>..\lib\KeePass.exe</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\ErrorHandler.cs" />
+    <Compile Include="Exceptions\AuthProviderIsUnavailableException.cs" />
+    <Compile Include="Exceptions\AuthProviderUserCancelledException.cs" />
+    <Compile Include="Exceptions\AuthProviderInvalidKeyException.cs" />
+    <Compile Include="Exceptions\AuthProviderSystemErrorException.cs" />
+    <Compile Include="Exceptions\AuthProviderException.cs" />
+    <Compile Include="AuthProviders\IAuthProvider.cs" />
+    <Compile Include="AuthProviders\AuthProviderUIContext.cs" />
+    <Compile Include="AuthProviders\WinHelloProviderForegroundDecorator.cs" />
+    <Compile Include="Exceptions\EnviromentErrorException.cs" />
+    <Compile Include="Exceptions\KeePassWinHelloException.cs" />
+    <Compile Include="KeyManagement\Storage\IKeyStorage.cs" />
+    <Compile Include="KeyManagement\KeyCipher.cs" />
+    <Compile Include="KeyManagement\KeyManager.cs" />
+    <Compile Include="KeyManagement\Storage\KeyMemoryStorage.cs" />
+    <Compile Include="KeyManagement\ProtectedKey.cs" />
+    <Compile Include="KeyManagement\Storage\KeyWindowsStorage.cs" />
+    <Compile Include="Settings\OptionsPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Settings\OptionsPanel.Designer.cs">
+      <DependentUpon>OptionsPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\OptionsPanelCreation.cs" />
+    <Compile Include="Settings\Settings.cs" />
+    <Compile Include="AuthProviders\WinHelloProvider.cs" />
+    <Compile Include="KeePassWinHelloExt.cs" />
+    <Compile Include="AuthProviders\XorProvider.cs" />
+    <Compile Include="Utilities\UAC.cs" />
+    <Compile Include="Utilities\WinAPIResultExtensions.cs" />
+    <Compile Include="Utilities\WindowsForegroundEnsurer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Settings\OptionsPanel.resx">
+      <DependentUpon>OptionsPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore">
+      <Link>.gitignore</Link>
+    </None>
+    <None Include="..\keepass.version">
+      <Link>keepass.version</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\KPWH.ico" />
+    <Content Include="Resources\KPWH_16x16.png" />
+    <Content Include="Resources\KPWH_32x32.png" />
+    <Content Include="Resources\KPWH_512x512.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="PackPlugin" AfterTargets="PostBuildEvent" Condition="!($(DefineConstants.Contains('MONO')))">
+    <Exec Condition="'$(Configuration)' == 'Debug'" ContinueOnError="true" Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\Pack-Plugin.ps1&quot; -Arg &quot;-SkipChoco&quot;" WorkingDirectory="$(ProjectDir).." />
+    <Exec Condition="'$(Configuration)' == 'Release'" Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\Pack-Plugin.ps1&quot;" WorkingDirectory="$(ProjectDir).." />
+  </Target>
+  <Target Name="DeployForDebug" Condition="'$(Configuration)' == 'Debug'" AfterTargets="PackPlugin">
+    <Exec ContinueOnError="true" Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\Deploy-Plugin.ps1&quot; -Arg &quot;-ForDebug&quot;" WorkingDirectory="$(ProjectDir).." />
+  </Target>
+</Project>
