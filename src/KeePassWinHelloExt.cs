@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using KeePass.Forms;
 using KeePass.Plugins;
 using KeePass.UI;
@@ -12,14 +13,25 @@ namespace KeePassWinHello
     {
         private IPluginHost _host;
         private KeyManager _keyManager;
+        private readonly object _unlockMutex = new Object();
 
         public override Image SmallIcon
         {
             get
             {
-                return UIUtil.GetSmallIconSize().Height > 16
-                    ? Properties.Resources.KPWH_32x32
-                    : Properties.Resources.KPWH_16x16;
+                try
+                {
+                    var GetSmallIconSize = typeof(UIUtil).GetMethod("GetSmallIconSize", BindingFlags.Public | BindingFlags.Static);
+                    var size = GetSmallIconSize != null ? (Size)GetSmallIconSize.Invoke(null, null) : new Size(16, 16);
+
+                    return size.Height > 16
+                        ? Properties.Resources.KPWH_32x32
+                        : Properties.Resources.KPWH_16x16;
+                }
+                catch (Exception)
+                {
+                    return Properties.Resources.KPWH_16x16;
+                }
             }
         }
 
@@ -63,7 +75,10 @@ namespace KeePassWinHello
 
             GlobalWindowManager.WindowAdded -= OnWindowAdded;
             if (_keyManager != null)
+            {
                 _host.MainWindow.FileClosingPre -= _keyManager.OnDBClosing;
+                _keyManager.Dispose();
+            }
 
             _host = null;
         }
@@ -75,7 +90,8 @@ namespace KeePassWinHello
                 var keyPromptForm = e.Form as KeyPromptForm;
                 if (keyPromptForm != null && _keyManager != null)
                 {
-                    _keyManager.OnKeyPrompt(keyPromptForm, _host.MainWindow);
+                    lock (_unlockMutex)
+                        _keyManager.OnKeyPrompt(keyPromptForm, _host.MainWindow);
                     return;
                 }
 
